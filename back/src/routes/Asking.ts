@@ -3,6 +3,8 @@ import {Context, Hono} from 'hono';
 import {Asking} from '../models/asking';
 import {CreationsUsers} from '../models/user';
 import { stat } from 'fs';
+import { exec } from 'child_process';
+import util from 'util';
 
 const api = new Hono().basePath('/');
 
@@ -214,5 +216,57 @@ api.get('/asking', async (c: any) => {
         return c.status(500).json({ msg: 'Error fetching asking details', error: error.message });
     }
 });
+
+api.post('/execute-command', async (c: any) => {
+    const { commandKey } = await c.req.json();
+
+    if (!commandKey) {
+        return c.json({ msg: 'No command provided' }, 400);
+    }
+
+    try {
+        return new Promise((resolve) => {
+            exec(commandKey, (error, stdout, stderr) => {
+                if (error) {
+                    resolve(c.json({ error: `Erreur: ${stderr}` }, 500));
+                } else {
+                    resolve(c.json({ result: stdout.trim() }));
+                }
+            });
+        });
+    } catch (error: any) {
+        return c.json({ msg: 'Erreur lors de l’exécution de la commande', error: error.message }, 500);
+    }
+});
+
+//Correction
+
+// const execPromise = util.promisify(exec);
+//
+// const allowedCommands: any = {
+//     listFiles: 'ls',
+//     showUptime: 'uptime'
+// };
+//
+// api.post('/execute-command', async (c) => {
+//     const { commandKey } = await c.req.json();
+//
+//     if (!commandKey || !allowedCommands[commandKey]) {
+//         return c.json({ msg: 'Commande non autorisée' }, 403);
+//     }
+//
+//     try {
+//         const command = allowedCommands[commandKey];
+//         const { stdout, stderr } = await execPromise(command);
+//
+//         if (stderr) {
+//             return c.json({ error: `Erreur: ${stderr}` }, 500);
+//         }
+//
+//         return c.json({ result: stdout });
+//     } catch (error: any) {
+//         return c.json({ msg: 'Erreur lors de l’exécution de la commande', error: error.message }, 500);
+//     }
+// });
 
 export default api;
