@@ -57,16 +57,16 @@ const router = createRouter({
     {
       path: '/admin',
       component: AdminLayout,
-      meta: { requiresAdmin: true },
+      // meta: { requiresAdmin: true },
       children: [
         {
           path: 'users',
-          meta: { requiresAdmin: true },
+          // meta: { requiresAdmin: true },
           component: AdminUsers
         },
         {
           path: 'askings',
-          meta: { requiresAdmin: true },
+          // meta: { requiresAdmin: false },
           component: AdminAskings
         }
       ]
@@ -74,7 +74,7 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
+/*router.beforeEach((to, from, next) => {
   const userStore = useAuthStore();
   if (to.matched.some(record => record.meta.requiresAdmin)) {
     if (!userStore.isAdmin) {
@@ -85,6 +85,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
-});
+});*/
 
 export default router;
