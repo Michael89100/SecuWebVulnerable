@@ -20,6 +20,11 @@ const router = createRouter({
       component: Home
     },
     {
+      path: '/lfi',
+      name: 'Lfi',
+      component: () => import('../views/LFI.vue')
+    },
+    {
       path: '/demo-rce',
       name: 'demoRCE',
       component: () => import('../views/Demo-RCE.vue')
