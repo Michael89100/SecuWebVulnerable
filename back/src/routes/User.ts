@@ -41,7 +41,7 @@ api.post('/login', async (c) => {
     try {
         const { mail, password } = await c.req.json();
 
-        const user = await CreationsUsers.findOne({ mail });
+        const user = await CreationsUsers.find({ mail });
 
         return c.json({ user });
     } catch (error: any) {
