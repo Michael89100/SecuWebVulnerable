@@ -23,8 +23,8 @@ export default {
   methods: {
     async executeCommand() {
       try {
-        const response = await axios.post('http://localhost:3000/execute-command', {
-          command: this.command,
+        const response = await axios.post('http://localhost:3000/api/execute-command', {
+          commandKey: this.command,
         });
         this.result = response.data.result || response.data.error;
       } catch (error) {

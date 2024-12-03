@@ -12,7 +12,6 @@ await DbConnect()
 
 // Use the cors middleware
 app.use('/api/*', cors());
-app.use('/execute-command', cors());
 
 const port = 3000
 console.log(`Server is running on port ${port}`)
