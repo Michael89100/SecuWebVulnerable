@@ -53,6 +53,14 @@ const login = async () => {
   }
 };
 
+// Correction
+
+// const login = async () => {
+//   await authStore.login({ mail: email.value, password: password.value });
+//   if (!authStore.error) {
+//     router.push('/');
+//   }
+// };
 </script>
 
 <style scoped>
