@@ -54,43 +54,21 @@ const router = createRouter({
       name: 'video-conference',
       component: VideoConference
     },
-    // {
-    //   path: '/:pathMatch(.*)*',
-    //   name: 'NotFound',
-    //   component: () => import('../views/NotFoundPage.vue')
-    // }
-    // ,
     {
       path: '/admin',
       component: AdminLayout,
-      // meta: { requiresAdmin: true },
       children: [
         {
           path: 'users',
-          // meta: { requiresAdmin: true },
           component: AdminUsers
         },
         {
           path: 'askings',
-          // meta: { requiresAdmin: false },
           component: AdminAskings
         }
       ]
     }
   ]
 })
-
-/*router.beforeEach((to, from, next) => {
-  const userStore = useAuthStore();
-  if (to.matched.some(record => record.meta.requiresAdmin)) {
-    if (!userStore.isAdmin) {
-      next({ path: '/' }); 
-    } else {
-      next();
-    }
-  } else {
-    next();
-  }
-});*/
 
 export default router;

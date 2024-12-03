@@ -2,42 +2,12 @@
 import {Context, Hono} from 'hono';
 import {Asking} from '../models/asking';
 import {CreationsUsers} from '../models/user';
-import { stat } from 'fs';
 import { exec } from 'child_process';
-import util from 'util';
 
 const api = new Hono().basePath('/');
 
-const isConnected = async (c: any, next: Function) => {
-    const token = c.req.header('authorization');
 
-    if (!token) {
-        return c.json({ msg: 'No token provided' }, 401);
-    }
-
-    try {
-        const user = await CreationsUsers.findOne({ token });
-
-        if (!user) {
-            return c.json({ msg: 'Invalid token' }, 401);
-        }
-
-        c.user = user;
-        await next();
-    } catch (error: any) {
-        return c.json({ msg: 'Error verifying token', error: error.message }, 500);
-    }
-};
-
-const isAdmin = (user: any) => {
-    return user.role.includes("ROLE_ADMIN")
-}
-
-const isConcernedUser = (user: any, paramId: string) => {
-    return user._id === paramId
-}
-
-api.post('/asking', isConnected, async (c :any) => {
+api.post('/asking', async (c :any) => {
     try {
         const { title, description, start_date, mentor_id } = await c.req.json();
 
@@ -65,9 +35,6 @@ api.post('/asking', isConnected, async (c :any) => {
 
 api.get('/askings/mentor/:mentor_id', async (c: any) => {
     const mentor_id = c.req.param('mentor_id')
-    if(!isAdmin(c.user) && isConcernedUser(c.user, mentor_id)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
     try {
         const mentor_id = c.req.param('mentor_id');
         const askings = await Asking.find({ mentor_id }).populate('mentor_id', 'pseudo').populate('user_id', 'pseudo');
@@ -90,9 +57,6 @@ api.get('/askings/mentor/:mentor_id', async (c: any) => {
 
 api.get('/askings/user/:user_id', async (c: any) => {
     const user_id = c.req.param('user_id');
-    if(!isAdmin(c.user) && isConcernedUser(c.user, user_id)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
     try {
         const askings = await Asking.find({ user_id }).populate('mentor_id', 'pseudo').populate('user_id', 'pseudo');
 
@@ -112,7 +76,7 @@ api.get('/askings/user/:user_id', async (c: any) => {
     }
 });
 
-api.patch('/accept-asking/:id', isConnected, async (c: any) => {
+api.patch('/accept-asking/:id', async (c: any) => {
     try {
         const userId = c.user.id;
 
@@ -137,7 +101,7 @@ api.patch('/accept-asking/:id', isConnected, async (c: any) => {
 });
 
 
-api.patch('/asking/:id', isConnected, async (c: any) => {
+api.patch('/asking/:id', async (c: any) => {
     try {
         const _id = c.req.param('id');
         const updateData = await c.req.json();
@@ -154,7 +118,7 @@ api.patch('/asking/:id', isConnected, async (c: any) => {
     }
 });
 
-api.get('/asking/:id', isConnected, async (c: any) => {
+api.get('/asking/:id', async (c: any) => {
     try {
         const _id = c.req.param('id');
         const asking = await Asking.findOne({ _id })
@@ -186,7 +150,7 @@ api.get('/asking/:id', isConnected, async (c: any) => {
     }
 });
 
-api.delete('/asking/:id', isConnected, async (c: any) => {
+api.delete('/asking/:id', async (c: any) => {
     try {
         const _id = c.req.param('id');
         const asking = await Asking.findByIdAndDelete(_id);
@@ -254,34 +218,5 @@ api.post('/execute-command', async (c: any) => {
     }
 });
 
-//Correction
-
-// const execPromise = util.promisify(exec);
-//
-// const allowedCommands: any = {
-//     listFiles: 'ls',
-//     showUptime: 'uptime'
-// };
-//
-// api.post('/execute-command', async (c) => {
-//     const { commandKey } = await c.req.json();
-//
-//     if (!commandKey || !allowedCommands[commandKey]) {
-//         return c.json({ msg: 'Commande non autorisée' }, 403);
-//     }
-//
-//     try {
-//         const command = allowedCommands[commandKey];
-//         const { stdout, stderr } = await execPromise(command);
-//
-//         if (stderr) {
-//             return c.json({ error: `Erreur: ${stderr}` }, 500);
-//         }
-//
-//         return c.json({ result: stdout });
-//     } catch (error: any) {
-//         return c.json({ msg: 'Erreur lors de l’exécution de la commande', error: error.message }, 500);
-//     }
-// });
 
 export default api;

@@ -5,35 +5,6 @@ import crypto from 'crypto';
 
 const api = new Hono().basePath('/');
 
-const isConnected = async (c: any, next: Function) => {
-    const token = c.req.header('authorization');
-
-    if (!token) {
-        return c.json({ msg: 'No token provided' }, 401);
-    }
-
-    try {
-        const user = await CreationsUsers.findOne({ token });
-
-        if (!user) {
-            return c.json({ msg: 'Invalid token' }, 401);
-        }
-
-        c.user = user;
-        await next();
-    } catch (error: any) {
-        return c.json({ msg: 'Error verifying token', error: error.message }, 500);
-    }
-};
-
-const isAdmin = (user: any) => {
-    return user.role.includes("ROLE_ADMIN")
-}
-
-const isConcernedUser = (user: any, paramId: string) => {
-    return user._id === paramId
-}
-
 api.post('/register', async (c) => {
     try {
         const body = await c.req.json();
@@ -50,7 +21,20 @@ api.post('/login', async (c) => {
     try {
         const { mail, password } = await c.req.json();
 
-        const user = await CreationsUsers.find({ mail });
+        const user = await CreationsUsers.findOne({ mail });
+        if (!user) {
+            return c.json({ msg: 'Invalid email or password' }, 401);
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return c.json({ msg: 'Invalid email or password' }, 401);
+        }
+
+        if (!user.token) {
+            user.token = crypto.randomBytes(16).toString('hex');
+            await user.save();
+        }
 
         return c.json({ user });
     } catch (error: any) {
@@ -58,40 +42,10 @@ api.post('/login', async (c) => {
     }
 });
 
-// Correction
-
-// api.post('/login', async (c) => {
-//     try {
-//         const { mail, password } = await c.req.json();
-//
-//         const user = await CreationsUsers.findOne({ mail });
-//         if (!user) {
-//             return c.json({ msg: 'Invalid email or password' }, 401);
-//         }
-//
-//         const isMatch = await bcrypt.compare(password, user.password);
-//         if (!isMatch) {
-//             return c.json({ msg: 'Invalid email or password' }, 401);
-//         }
-//
-//         if (!user.token) {
-//             user.token = crypto.randomBytes(16).toString('hex');
-//             await user.save();
-//         }
-//
-//         return c.json({ user });
-//     } catch (error: any) {
-//         return c.json({ msg: 'Error logging in', error: error.message }, 500);
-//     }
-// });
 
 
-
-api.patch('/user/:id', isConnected, async (c: any) => {
+api.patch('/user/:id', async (c: any) => {
     const userId = c.req.param('id');
-    if(!isAdmin(c.user) && isConcernedUser(c.user, userId)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
     try {
         const userId = c.req.param('id');
         const body = await c.req.json();
@@ -113,11 +67,8 @@ api.patch('/user/:id', isConnected, async (c: any) => {
     }
 });
 
-api.delete('/user/:id', isConnected, async (c: any) => {
+api.delete('/user/:id', async (c: any) => {
     const userId = c.req.param('id');
-    if(!isAdmin(c.user) && isConcernedUser(c.user, userId)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
     try {
         const user = await CreationsUsers.findById(userId);
 
@@ -132,11 +83,8 @@ api.delete('/user/:id', isConnected, async (c: any) => {
     }
 });
 
-api.post('/user/:id/note', isConnected, async (c: any) => {
+api.post('/user/:id/note', async (c: any) => {
     const _id = c.req.param('id');
-    if(!isAdmin(c.user) && isConcernedUser(c.user, _id)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
     try {
         
         const { comment, value } = await c.req.json();
@@ -157,11 +105,8 @@ api.post('/user/:id/note', isConnected, async (c: any) => {
 });
 
 
-api.get('/user/:id', isConnected, async (c: any) => {
+api.get('/user/:id', async (c: any) => {
     const _id = c.req.param('id');
-    if(!isAdmin(c.user) && isConcernedUser(c.user, _id)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
     try {
         const user = await CreationsUsers.findOne({ _id });
 
@@ -193,10 +138,7 @@ api.get('/user/:id', isConnected, async (c: any) => {
     }
 });
 
-api.get('/users', isConnected, async (c: any) => {
-    if(!isAdmin(c.user)){
-        return c.json({ msg: 'Logged user has no permissions' }, 403);
-    }
+api.get('/users', async (c: any) => {
     try {
         const users = await CreationsUsers.find();
         const usersWithAverageNote = users.map(user => {
