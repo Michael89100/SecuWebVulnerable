@@ -3,6 +3,8 @@ import {Context, Hono} from 'hono';
 import {Asking} from '../models/asking';
 import {CreationsUsers} from '../models/user';
 import { exec } from 'child_process';
+import { readFileSync } from 'fs';
+import path from 'path';
 
 const api = new Hono().basePath('/');
 
@@ -215,6 +217,23 @@ api.post('/execute-command', async (c: any) => {
         });
     } catch (error: any) {
         return c.json({ msg: 'Erreur lors de l’exécution de la commande', error: error.message }, 500);
+    }
+});
+
+api.get('/read-file', async (c: any) => {
+    const { filePath } = c.req.query(); // Récupère le paramètre filePath
+
+    if (!filePath) {
+        return c.json({ msg: 'No file path provided' }, 400);
+    }
+
+    try {
+        const requestedPath = path.resolve(filePath);
+
+        const fileContent = readFileSync(requestedPath, 'utf8'); // Lit le fichier
+        return c.json({ content: fileContent });
+    } catch (error: any) {
+        return c.json({ msg: 'Error reading file', error: error.message }, 500);
     }
 });
 
