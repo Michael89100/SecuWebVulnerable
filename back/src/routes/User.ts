@@ -86,6 +86,7 @@ api.post('/login', async (c) => {
 // });
 
 
+
 api.patch('/user/:id', isConnected, async (c: any) => {
     const userId = c.req.param('id');
     if(!isAdmin(c.user) && isConcernedUser(c.user, userId)){
@@ -193,10 +194,11 @@ api.get('/user/:id', isConnected, async (c: any) => {
 });
 
 api.get('/users', isConnected, async (c: any) => {
-    if(!isAdmin(c.user))
+    if(!isAdmin(c.user)){
+        return c.json({ msg: 'Logged user has no permissions' }, 403);
+    }
     try {
         const users = await CreationsUsers.find();
-
         const usersWithAverageNote = users.map(user => {
             const notes = user.notes;
             const totalNotes = notes.length;
