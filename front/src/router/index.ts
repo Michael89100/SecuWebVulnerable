@@ -18,7 +18,13 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: Home
-    },{
+    },
+    {
+      path: '/demo-rce',
+      name: 'demoRCE',
+      component: () => import('../views/Demo-RCE.vue')
+    },
+    {
       path: '/new-asking/:mentor_id',
       name: 'newAsking',
       component: () => import('../views/NewAskingPage.vue')
@@ -48,12 +54,12 @@ const router = createRouter({
       name: 'video-conference',
       component: VideoConference
     },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'NotFound',
-      component: () => import('../views/NotFoundPage.vue')
-    }
-    ,
+    // {
+    //   path: '/:pathMatch(.*)*',
+    //   name: 'NotFound',
+    //   component: () => import('../views/NotFoundPage.vue')
+    // }
+    // ,
     {
       path: '/admin',
       component: AdminLayout,
