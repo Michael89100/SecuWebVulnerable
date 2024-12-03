@@ -38,29 +38,11 @@ const password = ref('');
 const router = useRouter();
 
 const login = async () => {
-  // Tenter de parser l'email comme JSON
-  let parsedMail;
-  try {
-    parsedMail = JSON.parse(email.value); // Convertit en objet si possible
-  } catch (e) {
-    parsedMail = email.value; // Sinon, garde la valeur brute
-  }
-
-  await authStore.login({ mail: parsedMail, password: password.value });
-
+  await authStore.login({ mail: email.value, password: password.value });
   if (!authStore.error) {
     router.push('/');
   }
 };
-
-// Correction
-
-// const login = async () => {
-//   await authStore.login({ mail: email.value, password: password.value });
-//   if (!authStore.error) {
-//     router.push('/');
-//   }
-// };
 </script>
 
 <style scoped>
